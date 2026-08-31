@@ -29,7 +29,17 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'cobertura', 'json-summary'],
       reportsDirectory: './coverage',
-      include: ['src/components/GroupCard.tsx', 'src/components/ContributionFlow.tsx', 'src/components/TransactionHistory.tsx'],
+      include: [
+        // existing components
+        'src/components/GroupCard.tsx',
+        'src/components/ContributionFlow.tsx',
+        'src/components/TransactionHistory.tsx',
+        // wallet service layer (issue #85)
+        'src/wallet/freighterAdapter.ts',
+        'src/wallet/WalletSigningProvider.tsx',
+        'src/wallet/WalletConnectionProvider.tsx',
+        'src/services/transactionBuilderService.ts',
+      ],
       thresholds: {
         lines: 80,
         functions: 80,

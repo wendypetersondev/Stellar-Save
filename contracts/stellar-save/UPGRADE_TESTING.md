@@ -4,7 +4,7 @@ This document describes the comprehensive upgrade testing infrastructure for the
 
 ## Overview
 
-The upgrade tests verify that contract upgrades preserve state, maintain API compatibility, and allow safe rollback. Tests are organized into 10 categories covering all aspects of upgrade safety.
+The upgrade tests verify that contract upgrades preserve state, maintain API compatibility, and allow safe rollback. Tests are organized into 10 categories in `upgrade_integration_tests.rs` covering all aspects of upgrade safety, including end-to-end tests that exercise the full `upgrade_contract → migrate_storage` client entry-point path (issue #86).
 
 ## Test Organization
 
@@ -12,7 +12,7 @@ The upgrade tests verify that contract upgrades preserve state, maintain API com
 |----------|---------------|------------|
 | `state_preservation` | All storage entries survive a simulated upgrade | 4 tests |
 | `api_compatibility` | Every public function callable with v1 argument shapes | 5 tests |
-| `rollback` | State is consistent after v1→v2→v1 round-trip | 6 tests |
+| `rollback` | State is consistent after v1→v2→v1 round-trip | 8 tests |
 | `backward_compat` | Error codes, enum discriminants, and key shapes are stable | 5 tests |
 | `schema_version_guard` | Migration is a no-op when already at target version | 3 tests |
 | `config_preservation` | ContractConfig and admin survive upgrade | 4 tests |
@@ -20,22 +20,26 @@ The upgrade tests verify that contract upgrades preserve state, maintain API com
 | `full_lifecycle` | Group with members + contributions + payout survives upgrade | 3 tests |
 | `performance_regression` | Key operations stay within instruction budgets | 3 tests |
 | `migration_correctness` | Data correctness, partial-rollback, and failure scenarios | 6 tests |
+| `contract_entry_point` | End-to-end upgrade_contract → migrate_storage → state verified (issue #86) | 5 tests |
 
-**Total: 42 upgrade tests**
+**Total: 49 upgrade integration tests**
 
 ## Running Tests
 
 ### Locally
 
 ```bash
-# Run all upgrade tests
-cargo test --manifest-path contracts/stellar-save/Cargo.toml upgrade_tests -- --test-threads=1
+# Run all upgrade integration tests
+cargo test --manifest-path contracts/stellar-save/Cargo.toml upgrade_integration_tests -- --test-threads=1
 
 # Run specific test category
-cargo test --manifest-path contracts/stellar-save/Cargo.toml upgrade_tests::upgrade_tests::test_rollback -- --test-threads=1
+cargo test --manifest-path contracts/stellar-save/Cargo.toml upgrade_integration_tests::upgrade_integration_tests::test_rollback -- --test-threads=1
+
+# Run the end-to-end entry-point tests (issue #86)
+cargo test --manifest-path contracts/stellar-save/Cargo.toml upgrade_integration_tests::upgrade_integration_tests::test_upgrade_then_migrate_storage_end_to_end -- --test-threads=1
 
 # Run with verbose output
-cargo test --manifest-path contracts/stellar-save/Cargo.toml upgrade_tests -- --test-threads=1 --nocapture
+cargo test --manifest-path contracts/stellar-save/Cargo.toml upgrade_integration_tests -- --test-threads=1 --nocapture
 ```
 
 ### CI/CD
@@ -148,6 +152,19 @@ that failure/edge scenarios (empty contract, repeated rollback) are handled safe
 > `ContributionRecord.member_address`) were not covered. Several test files also accessed
 > `record.member` (an invalid field) which was fixed as part of this work.
 
+### 11. Contract Entry-Point Upgrade Path Tests (Issue #86)
+
+Verify the full upgrade lifecycle through the public contract client API, exercising
+`upgrade_contract` and `migrate_storage` as an external caller would — not via direct
+internal function calls. These are the canonical end-to-end "deploy old → upgrade →
+verify state" tests.
+
+- `test_upgrade_contract_advances_contract_version` - `upgrade_contract` increments the on-chain binary version
+- `test_upgrade_then_migrate_storage_end_to_end` - **Primary E2E test**: seed v1 state → `upgrade_contract` → `migrate_storage` → data readable via client API
+- `test_upgrade_contract_state_readable_via_client_after_migrate` - Groups readable via `get_group` after upgrade + migration
+- `test_downgrade_via_upgrade_contract_rejected` - `upgrade_contract` rejects same/lower version numbers (version guard, issue #72)
+- `test_contract_version_readable_after_upgrade` - `get_contract_version` reflects the newly set version
+
 ## Migration Framework
 
 The contract uses a version-tracked migration framework (`migration.rs`):
@@ -213,9 +230,11 @@ Check that you're calling `v1_to_v2::apply()` or `v1_to_v2::rollback()` correctl
 
 ## References
 
-- `src/upgrade_tests.rs` - All upgrade test implementations (42 tests across 10 categories)
-- `src/migration.rs` - Migration framework
+- `src/upgrade_integration_tests.rs` - All upgrade integration test implementations (49 tests across 11 categories)
+- `src/migration.rs` - Migration framework (contract version guard — issue #72)
 - `src/migrations/v1_to_v2.rs` - v1→v2 migration implementation
 - `src/migration_tests.rs` - Migration framework unit tests (includes `member_address` regression tests)
+- `docs/runbooks/contract-upgrade.md` - Operational upgrade procedure, CLI commands, rollback steps
+- `docs/upgrade-guide.md` - Storage compatibility rules, schema versioning, test runner commands
 - `CYCLE_CONTRIBUTIONS.md` - ContributionRecord field documentation and technical debt notes
 - `.github/workflows/upgrade-tests.yml` - CI workflow
