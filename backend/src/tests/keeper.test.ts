@@ -1,5 +1,6 @@
 import { KeeperJob } from '../jobs/keeper_job';
-import { IStellarClient } from '../lib/stellar_client';
+
+import type { IStellarClient } from '../lib/stellar_client';
 
 jest.mock('../metrics', () => ({
   registry: {
@@ -32,7 +33,7 @@ describe('KeeperJob.runOnce (with Dependency Injection)', () => {
 
   it('does nothing when no groups are due', async () => {
     mockDb.contractEvent.findMany
-      .mockResolvedValueOnce([])  // contributions
+      .mockResolvedValueOnce([]) // contributions
       .mockResolvedValueOnce([]); // payouts
     const job = new KeeperJob('CCONTRACT', mockStellarClient, mockDb);
     await job.runOnce();
@@ -79,18 +80,14 @@ describe('KeeperJob.runOnce (with Dependency Injection)', () => {
     const job = new KeeperJob('CCONTRACT', mockStellarClient, mockDb);
 
     for (let i = 0; i < 3; i++) {
-      mockDb.contractEvent.findMany
-        .mockResolvedValueOnce(contributions)
-        .mockResolvedValueOnce([]);
+      mockDb.contractEvent.findMany.mockResolvedValueOnce(contributions).mockResolvedValueOnce([]);
       await job.runOnce();
     }
 
     mockStellarClient.executePayoutsBatch.mockClear();
 
     // 4th run: group is dead-lettered, executePayoutsBatch must NOT be called
-    mockDb.contractEvent.findMany
-      .mockResolvedValueOnce(contributions)
-      .mockResolvedValueOnce([]);
+    mockDb.contractEvent.findMany.mockResolvedValueOnce(contributions).mockResolvedValueOnce([]);
     await job.runOnce();
     expect(mockStellarClient.executePayoutsBatch).not.toHaveBeenCalled();
   }, 15000);

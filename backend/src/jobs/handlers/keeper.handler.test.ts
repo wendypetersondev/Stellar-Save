@@ -1,5 +1,6 @@
 import { KeeperHandler } from './keeper.handler';
-import { IStellarClient } from '../../lib/stellar_client';
+
+import type { IStellarClient } from '../../lib/stellar_client';
 
 describe('KeeperHandler', () => {
   let mockDb: any;
@@ -43,10 +44,7 @@ describe('KeeperHandler', () => {
     const handler = new KeeperHandler(contractId, mockStellarClient, mockDb);
     await handler.execute();
 
-    expect(mockStellarClient.executePayoutsBatch).toHaveBeenCalledWith(
-      ['group-1'],
-      contractId,
-    );
+    expect(mockStellarClient.executePayoutsBatch).toHaveBeenCalledWith(['group-1'], contractId);
   });
 
   it('should skip groups that already have payouts', async () => {

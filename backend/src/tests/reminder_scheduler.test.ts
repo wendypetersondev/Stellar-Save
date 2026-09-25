@@ -2,9 +2,11 @@ import {
   calculateReminderSchedules,
   isTimeInQuietHours,
   formatLocalTime,
-  adjustTimeForTimezone,
-  ReminderPreferences,
+  adjustTimeForTimezone
 } from '../services/reminder_scheduler';
+
+import type {
+  ReminderPreferences} from '../services/reminder_scheduler';
 
 describe('Reminder Scheduler Module Unit Tests', () => {
   const referenceNow = new Date('2026-03-01T00:00:00.000Z');
@@ -43,12 +45,20 @@ describe('Reminder Scheduler Module Unit Tests', () => {
 
     it('marks slots as muted when user opts out or enables muteAll', () => {
       const prefOptOut: ReminderPreferences = { contributionReminders: false };
-      const slots1 = calculateReminderSchedules({ deadline, preferences: prefOptOut, now: referenceNow });
+      const slots1 = calculateReminderSchedules({
+        deadline,
+        preferences: prefOptOut,
+        now: referenceNow,
+      });
       expect(slots1[0].isMuted).toBe(true);
       expect(slots1[0].skipReason).toBe('opted_out');
 
       const prefMuteAll: ReminderPreferences = { muteAll: true };
-      const slots2 = calculateReminderSchedules({ deadline, preferences: prefMuteAll, now: referenceNow });
+      const slots2 = calculateReminderSchedules({
+        deadline,
+        preferences: prefMuteAll,
+        now: referenceNow,
+      });
       expect(slots2[0].isMuted).toBe(true);
       expect(slots2[0].skipReason).toBe('opted_out');
     });

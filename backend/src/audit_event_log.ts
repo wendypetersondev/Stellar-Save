@@ -29,12 +29,17 @@
  */
 
 import crypto from 'crypto';
-import { Request, Response, NextFunction, Router } from 'express';
-import { prisma } from './prisma_client';
-import { logger } from './logger';
-import { adminAuthMiddleware, AuthenticatedRequest } from './auth_middleware';
+
+import { Router } from 'express';
 import { Gauge, Counter } from 'prom-client';
+
+import { adminAuthMiddleware } from './auth_middleware';
+import { logger } from './logger';
 import { registry } from './metrics';
+import { prisma } from './prisma_client';
+
+import type { AuthenticatedRequest } from './auth_middleware';
+import type { Request, Response, NextFunction} from 'express';
 
 // ── Prometheus metrics ────────────────────────────────────────────────────────
 
@@ -101,9 +106,19 @@ function computeHash(
   resourceId: string,
   before: string,
   after: string,
-  createdAt: string,
+  createdAt: string
 ): string {
-  const payload = [id, prevHash, actor, action, resourceType, resourceId, before, after, createdAt].join('|');
+  const payload = [
+    id,
+    prevHash,
+    actor,
+    action,
+    resourceType,
+    resourceId,
+    before,
+    after,
+    createdAt,
+  ].join('|');
   return crypto.createHash('sha256').update(payload, 'utf8').digest('hex');
 }
 
@@ -143,7 +158,7 @@ export class AuditEventLog {
           resourceId,
           beforeStr,
           afterStr,
-          now.toISOString(),
+          now.toISOString()
         );
 
         const entry = await tx.auditEventLog.create({
@@ -165,7 +180,7 @@ export class AuditEventLog {
         auditEntriesTotal.inc({ action: input.action });
         return entry as AuditEntry;
       },
-      { isolationLevel: 'Serializable' },
+      { isolationLevel: 'Serializable' }
     );
   }
 
@@ -221,7 +236,7 @@ export class AuditEventLog {
         e.resourceId ?? '',
         JSON.stringify(e.before ?? null),
         JSON.stringify(e.after ?? null),
-        new Date(e.createdAt).toISOString(),
+        new Date(e.createdAt).toISOString()
       );
 
       if (recomputed !== e.hash) {
@@ -297,7 +312,11 @@ const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
  * audit-quality rather than a full diff, which would require hooking into each
  * service's DB layer individually.
  */
-export function auditMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export function auditMiddleware(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void {
   if (!MUTATING_METHODS.has(req.method)) {
     next();
     return;
@@ -376,7 +395,7 @@ function summariseBody(body: unknown): Record<string, unknown> {
     Object.entries(obj)
       .filter(([k]) => !REDACTED.has(k))
       .slice(0, 20) // cap to 20 fields
-      .map(([k, v]) => [k, typeof v === 'object' ? '[object]' : v]),
+      .map(([k, v]) => [k, typeof v === 'object' ? '[object]' : v])
   );
 }
 
@@ -466,7 +485,7 @@ export function createAuditRouter(): Router {
       });
       if (!entry) return res.status(404).json({ error: 'Audit entry not found' });
       res.json(entry);
-    } catch (err) {
+    } catch {
       res.status(500).json({ error: 'Failed to fetch audit entry' });
     }
   });

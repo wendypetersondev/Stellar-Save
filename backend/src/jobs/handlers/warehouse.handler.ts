@@ -1,15 +1,13 @@
-import { S3Client } from '@aws-sdk/client-s3';
-import { WarehouseExportPipeline } from '../../warehouse_export';
+
 import { logger } from '../../logger';
+import { WarehouseExportPipeline } from '../../warehouse_export';
+
+import type { S3Client } from '@aws-sdk/client-s3';
 
 export class WarehouseHandler {
   private pipeline: WarehouseExportPipeline;
 
-  constructor(opts: {
-    s3Client?: S3Client;
-    bucket: string;
-    alertWebhook?: string;
-  }) {
+  constructor(opts: { s3Client?: S3Client; bucket: string; alertWebhook?: string }) {
     this.pipeline = new WarehouseExportPipeline({
       s3Client: opts.s3Client,
       bucket: opts.bucket,

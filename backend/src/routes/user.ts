@@ -1,7 +1,11 @@
-import { Router, NextFunction } from 'express';
-import { jwtAuthMiddleware, requireSelf, AuthenticatedRequest } from '../auth_middleware';
+import { Router } from 'express';
+
+import { jwtAuthMiddleware, requireSelf } from '../auth_middleware';
 import { AppError } from '../lib/errors';
 import { logger } from '../logger';
+
+import type { AuthenticatedRequest } from '../auth_middleware';
+import type { NextFunction } from 'express';
 
 /**
  * User routes — all protected by JWT authentication.
@@ -42,31 +46,39 @@ export function createUserRouter(): Router {
    * GET /api/user/:walletAddress/preferences
    * Returns notification/app preferences for the wallet owner.
    */
-  router.get('/:walletAddress/preferences', requireSelf, async (req: AuthenticatedRequest, res, next: NextFunction) => {
-    try {
-      const { UserPreferenceManager } = await import('../user_preference_manager');
-      const prefs = await UserPreferenceManager.getOrCreatePreferences(req.walletAddress!);
-      return res.json(prefs);
-    } catch (error) {
-      logger.error('Error fetching user preferences', { error: String(error) });
-      return next(new AppError('PREFERENCES_FETCH_FAILED', 'Failed to fetch preferences', 500));
+  router.get(
+    '/:walletAddress/preferences',
+    requireSelf,
+    async (req: AuthenticatedRequest, res, next: NextFunction) => {
+      try {
+        const { UserPreferenceManager } = await import('../user_preference_manager');
+        const prefs = await UserPreferenceManager.getOrCreatePreferences(req.walletAddress!);
+        return res.json(prefs);
+      } catch (error) {
+        logger.error('Error fetching user preferences', { error: String(error) });
+        return next(new AppError('PREFERENCES_FETCH_FAILED', 'Failed to fetch preferences', 500));
+      }
     }
-  });
+  );
 
   /**
    * PUT /api/user/:walletAddress/preferences
    * Updates notification/app preferences for the wallet owner.
    */
-  router.put('/:walletAddress/preferences', requireSelf, async (req: AuthenticatedRequest, res, next: NextFunction) => {
-    try {
-      const { UserPreferenceManager } = await import('../user_preference_manager');
-      const updated = await UserPreferenceManager.updatePreferences(req.walletAddress!, req.body);
-      return res.json({ message: 'Preferences updated', preferences: updated });
-    } catch (error) {
-      logger.error('Error updating user preferences', { error: String(error) });
-      return next(new AppError('PREFERENCES_UPDATE_FAILED', 'Failed to update preferences', 500));
+  router.put(
+    '/:walletAddress/preferences',
+    requireSelf,
+    async (req: AuthenticatedRequest, res, next: NextFunction) => {
+      try {
+        const { UserPreferenceManager } = await import('../user_preference_manager');
+        const updated = await UserPreferenceManager.updatePreferences(req.walletAddress!, req.body);
+        return res.json({ message: 'Preferences updated', preferences: updated });
+      } catch (error) {
+        logger.error('Error updating user preferences', { error: String(error) });
+        return next(new AppError('PREFERENCES_UPDATE_FAILED', 'Failed to update preferences', 500));
+      }
     }
-  });
+  );
 
   return router;
 }

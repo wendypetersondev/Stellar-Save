@@ -32,9 +32,7 @@ export interface NotificationPreferenceCreate {
   unsubscribeToken: string;
 }
 
-export type NotificationPreferenceUpdate = Partial<
-  Omit<NotificationPreferenceCreate, 'userId'>
->;
+export type NotificationPreferenceUpdate = Partial<Omit<NotificationPreferenceCreate, 'userId'>>;
 
 /** Minimal structural view of the Prisma delegate this repository needs. */
 export interface NotificationPreferenceDelegate {
@@ -78,6 +76,7 @@ export class NotificationPreferenceRepository {
   private get db(): NotificationPreferencePrisma {
     if (!this._db) {
       // Lazy require avoids pulling `prisma_client` into unit tests that inject a mock.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       this._db = require('../../prisma_client').prisma as NotificationPreferencePrisma;
     }
     return this._db;
@@ -102,7 +101,7 @@ export class NotificationPreferenceRepository {
 
   updateByUserId(
     userId: string,
-    data: NotificationPreferenceUpdate,
+    data: NotificationPreferenceUpdate
   ): Promise<NotificationPreferenceRow> {
     return this.db.notificationPreference.update({ where: { userId }, data });
   }
@@ -113,7 +112,7 @@ export class NotificationPreferenceRepository {
 
   async updateManyByUserIds(
     userIds: string[],
-    data: NotificationPreferenceUpdate,
+    data: NotificationPreferenceUpdate
   ): Promise<number> {
     const { count } = await this.db.notificationPreference.updateMany({
       where: { userId: { in: userIds } },

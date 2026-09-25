@@ -1,12 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { WalletStatusIndicator } from '../components/WalletStatusIndicator';
 import * as useClipboardHook from '../hooks/useClipboard';
 import * as useWalletHook from '../hooks/useWallet';
-
 
 vi.mock('../hooks/useWallet');
 vi.mock('../hooks/useClipboard');
@@ -176,9 +174,10 @@ describe('WalletStatusIndicator', () => {
      */
     vi.useFakeTimers();
     mockFetch.mockImplementation(
-      () => new Promise((resolve) => {
-        setTimeout(() => resolve({ ok: true }), 100);
-      }),
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ ok: true }), 100);
+        })
     );
 
     try {

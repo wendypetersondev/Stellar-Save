@@ -1,7 +1,9 @@
 import {
-  NotificationPreferenceRepository,
-  NotificationPreferencePrisma,
+  NotificationPreferenceRepository
 } from '../modules/notifications/notification-preference.repository';
+
+import type {
+  NotificationPreferencePrisma} from '../modules/notifications/notification-preference.repository';
 
 function mockDb() {
   return {
@@ -70,7 +72,7 @@ describe('NotificationPreferenceRepository', () => {
     db.notificationPreference.updateMany.mockResolvedValue({ count: 3 });
 
     await expect(
-      repo.updateManyByUserIds(['a', 'b', 'c'], { emailFrequency: 'weekly' }),
+      repo.updateManyByUserIds(['a', 'b', 'c'], { emailFrequency: 'weekly' })
     ).resolves.toBe(3);
     expect(db.notificationPreference.updateMany).toHaveBeenCalledWith({
       where: { userId: { in: ['a', 'b', 'c'] } },
@@ -84,6 +86,8 @@ describe('NotificationPreferenceRepository', () => {
     expect(db.notificationPreference.count).toHaveBeenCalledWith(undefined);
 
     await repo.count({ emailNotifications: true });
-    expect(db.notificationPreference.count).toHaveBeenCalledWith({ where: { emailNotifications: true } });
+    expect(db.notificationPreference.count).toHaveBeenCalledWith({
+      where: { emailNotifications: true },
+    });
   });
 });

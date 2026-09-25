@@ -1,8 +1,10 @@
 import { IpfsClient } from './client';
-import { PinningQueue, PinningJob } from './pinning_queue';
-import redis from '../redis';
+import { PinningQueue } from './pinning_queue';
 import { config } from '../config';
 import { logger } from '../logger';
+import redis from '../redis';
+
+import type { PinningJob } from './pinning_queue';
 
 const ACCESS_COUNTER_PREFIX = 'ipfs:access:count';
 const PINNED_CID_PREFIX = 'ipfs:pinned:cid';
@@ -98,7 +100,7 @@ export class PinningService {
     cid: string,
     groupId: string,
     contractId: string,
-    priority = 0,
+    priority = 0
   ): Promise<PinningJob> {
     const alreadyPinned = await redis.get(`${PINNED_CID_PREFIX}:${cid}`);
     if (alreadyPinned === 'true') {
@@ -116,7 +118,7 @@ export class PinningService {
 
   async recordAccess(cid: string): Promise<void> {
     const key = `${ACCESS_COUNTER_PREFIX}:${cid}`;
-    const count = await redis.incr(key);
+    await redis.incr(key);
     await redis.expire(key, 86400);
   }
 
@@ -149,7 +151,12 @@ export class PinningService {
     }
   }
 
-  async verifyAllPins(): Promise<{ total: number; pinned: number; missing: number; failed: number }> {
+  async verifyAllPins(): Promise<{
+    total: number;
+    pinned: number;
+    missing: number;
+    failed: number;
+  }> {
     const keys = await redis.keys(`${PINNED_CID_PREFIX}:*`);
     let pinned = 0;
     let missing = 0;

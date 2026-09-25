@@ -1,4 +1,5 @@
 import { Gauge, Counter } from 'prom-client';
+
 import { registry } from './metrics';
 
 // ── GitHub Actions cost (minutes consumed) ────────────────────────────────────
@@ -64,7 +65,7 @@ export function recordStellarFee(
   stroops: number,
   xlmUsdPrice: number,
   network: string,
-  operation: string,
+  operation: string
 ): void {
   const xlm = stroops / 10_000_000;
   stellarFeesXlm.inc({ network, operation }, xlm);

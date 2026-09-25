@@ -5,8 +5,10 @@
  * XSS, SQL injection, and other injection attacks.
  */
 
-import { Request, Response, NextFunction } from 'express';
 import { logger } from './logger';
+
+import type { Request, Response, NextFunction } from 'express';
+
 
 // HTML entity encoding map
 const HTML_ENTITIES: Record<string, string> = {
@@ -53,10 +55,7 @@ export class InputSanitizer {
   /**
    * Sanitize a string value
    */
-  static sanitizeString(
-    value: string,
-    options: SanitizationOptions = {}
-  ): string {
+  static sanitizeString(value: string, options: SanitizationOptions = {}): string {
     let sanitized = value;
 
     // Trim whitespace
@@ -86,7 +85,8 @@ export class InputSanitizer {
 
       // Check for dangerous patterns even after encoding
       for (const pattern of DANGEROUS_PATTERNS) {
-        if (pattern.test(value)) { // Check original value
+        if (pattern.test(value)) {
+          // Check original value
           logger.warn('XSS attempt detected', {
             field: options.fieldName,
             pattern: pattern.source,
@@ -102,7 +102,7 @@ export class InputSanitizer {
    * HTML entity encoding
    */
   static encodeHtml(text: string): string {
-    return text.replace(/[&<>"'\/]/g, (char) => HTML_ENTITIES[char] || char);
+    return text.replace(/[&<>"'/]/g, (char) => HTML_ENTITIES[char] || char);
   }
 
   /**
@@ -118,10 +118,7 @@ export class InputSanitizer {
   /**
    * Sanitize an entire object recursively
    */
-  static sanitizeObject(
-    obj: any,
-    options: SanitizationOptions = {}
-  ): any {
+  static sanitizeObject(obj: any, options: SanitizationOptions = {}): any {
     if (obj === null || obj === undefined) {
       return obj;
     }
@@ -217,11 +214,7 @@ export class InputSanitizer {
 /**
  * Express middleware for automatic input sanitization
  */
-export const sanitizeInputMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const sanitizeInputMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   try {
     // Sanitize body
     if (req.body && typeof req.body === 'object') {
@@ -270,7 +263,7 @@ export const sanitizeGroupMetadataMiddleware = (
       req.body.metadata = InputSanitizer.sanitizeGroupMetadata(req.body.metadata);
     }
     next();
-  } catch (error) {
+  } catch {
     res.status(400).json({
       error: 'Invalid metadata',
       message: 'Group metadata contains invalid content',
@@ -291,7 +284,7 @@ export const sanitizeProfileMiddleware = (
       req.body.profile = InputSanitizer.sanitizeProfileData(req.body.profile);
     }
     next();
-  } catch (error) {
+  } catch {
     res.status(400).json({
       error: 'Invalid profile data',
       message: 'Profile contains invalid content',

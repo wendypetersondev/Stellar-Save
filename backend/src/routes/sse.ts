@@ -8,8 +8,10 @@
  * Falls back gracefully: if the client disconnects, no more messages are sent.
  */
 
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+
 import type { ContractEventIndexer } from '../contract_event_indexer';
+import type { Request, Response } from 'express';
 
 // In-memory registry of active SSE clients per group (or global)
 // Maps groupId (or '*' for global) → Set of Response objects
@@ -35,13 +37,21 @@ export function broadcastEvent(groupId: string | null, event: object): void {
   // Broadcast to group-specific listeners
   if (groupId) {
     clients.get(groupId)?.forEach((res) => {
-      try { res.write(payload); } catch { /* client gone */ }
+      try {
+        res.write(payload);
+      } catch {
+        /* client gone */
+      }
     });
   }
 
   // Broadcast to global listeners
   clients.get('*')?.forEach((res) => {
-    try { res.write(payload); } catch { /* client gone */ }
+    try {
+      res.write(payload);
+    } catch {
+      /* client gone */
+    }
   });
 }
 
@@ -70,7 +80,11 @@ export function createSseRouter(_eventIndexer: ContractEventIndexer): Router {
 
     // Keep-alive ping every 25 s (prevents proxies from closing idle connections)
     const keepAlive = setInterval(() => {
-      try { res.write(': keepalive\n\n'); } catch { /* closed */ }
+      try {
+        res.write(': keepalive\n\n');
+      } catch {
+        /* closed */
+      }
     }, 25_000);
 
     const cleanup = addClient(key, res);

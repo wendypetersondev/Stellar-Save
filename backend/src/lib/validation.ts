@@ -11,9 +11,12 @@
  *   router.get('/groups', validateQuery(schemas.pagination), handler);
  */
 
-import { z, ZodTypeAny } from 'zod';
-import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
+
 import { AppError } from './errors';
+
+import type { Request, Response, NextFunction } from 'express';
+import type { ZodTypeAny } from 'zod';
 
 // ── Primitive / reusable schemas ─────────────────────────────────────────────
 
@@ -193,7 +196,11 @@ export function validateBody<T extends ZodTypeAny>(schema: T) {
  * On failure, calls `next(AppError)` with status 400.
  */
 export function validateQuery<T extends ZodTypeAny>(schema: T) {
-  return (req: Request & { validatedQuery?: ValidatedInput<T> }, _res: Response, next: NextFunction): void => {
+  return (
+    req: Request & { validatedQuery?: ValidatedInput<T> },
+    _res: Response,
+    next: NextFunction
+  ): void => {
     const result = schema.safeParse(req.query);
     if (!result.success) {
       const message = (result.error.issues as Array<{ path: (string | number)[]; message: string }>)

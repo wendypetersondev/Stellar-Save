@@ -5,6 +5,8 @@
  * It handles the 4-step rotation process: createSecret, setSecret, testSecret, finishSecret
  */
 
+import * as crypto from 'crypto';
+
 import {
   SecretsManagerClient,
   GetSecretValueCommand,
@@ -12,7 +14,7 @@ import {
   UpdateSecretVersionStageCommand,
   DescribeSecretCommand,
 } from '@aws-sdk/client-secrets-manager';
-import * as crypto from 'crypto';
+
 import { logger } from './logger';
 
 // Types for Lambda event
@@ -123,10 +125,7 @@ async function createSecret(event: RotationEvent): Promise<void> {
   }
 
   // Generate new secret value based on secret type
-  const newSecretValue = generateNewSecretValue(
-    event.SecretId,
-    currentSecret.SecretString
-  );
+  const newSecretValue = generateNewSecretValue(event.SecretId, currentSecret.SecretString);
 
   // Store the new secret with the AWSPENDING label
   const putCommand = new PutSecretValueCommand({
@@ -242,7 +241,7 @@ async function finishSecret(event: RotationEvent): Promise<void> {
 /**
  * Generate a new secret value based on the secret type
  */
-function generateNewSecretValue(secretId: string, currentValue: string): string {
+function generateNewSecretValue(secretId: string, _currentValue: string): string {
   // For JWT secrets, generate a new random string
   if (secretId.includes('jwt') || secretId.includes('secret')) {
     return crypto.randomBytes(64).toString('hex');
@@ -277,7 +276,7 @@ function generateNewSecretValue(secretId: string, currentValue: string): string 
  */
 async function updateServiceWithNewSecret(
   secretId: string,
-  newValue: string
+  _newValue: string
 ): Promise<void> {
   // This is where you'd implement service-specific logic
   // For example:

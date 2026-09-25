@@ -1,11 +1,13 @@
-import crypto from 'crypto';
 import { spawn } from 'child_process';
+import crypto from 'crypto';
+
 import {
   S3Client,
   PutObjectCommand,
   ListObjectsV2Command,
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
+
 import { config } from '../config';
 import { logger } from '../logger';
 
@@ -115,8 +117,8 @@ export class BackupService {
         'pg_dump',
         [
           '--format=custom', // binary + built-in LZ compression
-          '--compress=9',    // maximum compression level
-          '--no-password',   // credentials come from the connection string
+          '--compress=9', // maximum compression level
+          '--no-password', // credentials come from the connection string
           databaseUrl,
         ],
         { stdio: ['ignore', 'pipe', 'pipe'] }
@@ -132,7 +134,7 @@ export class BackupService {
         }
       });
 
-      child.on('close', code => {
+      child.on('close', (code) => {
         if (code === 0) {
           resolve(Buffer.concat(chunks));
         } else {
@@ -140,7 +142,7 @@ export class BackupService {
         }
       });
 
-      child.on('error', err => {
+      child.on('error', (err) => {
         reject(new Error(`Failed to spawn pg_dump: ${err.message}`));
       });
     });
@@ -162,7 +164,7 @@ export class BackupService {
       new ListObjectsV2Command({ Bucket: this.bucket, Prefix: 'backups/' })
     );
     return (res.Contents ?? [])
-      .map(obj => obj.Key)
+      .map((obj) => obj.Key)
       .filter((k): k is string => typeof k === 'string');
   }
 

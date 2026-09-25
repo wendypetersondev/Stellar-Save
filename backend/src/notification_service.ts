@@ -1,5 +1,5 @@
-import { prisma } from './prisma_client';
 import { config } from './config';
+import { prisma } from './prisma_client';
 
 /**
  * Notification Service
@@ -305,7 +305,9 @@ export class NotificationService {
         }
       }
 
-      logger.info(`Processed ${processedCount}/${pendingNotifications.length} queued notifications`);
+      logger.info(
+        `Processed ${processedCount}/${pendingNotifications.length} queued notifications`
+      );
       return processedCount;
     } catch (error) {
       logger.error('Error processing queued notifications', error);

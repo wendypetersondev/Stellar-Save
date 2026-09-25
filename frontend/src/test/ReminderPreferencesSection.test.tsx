@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
@@ -42,9 +42,7 @@ describe('ReminderPreferencesSection Component', () => {
       render(<ReminderPreferencesSection />);
 
       expect(screen.getByText('Contribution Reminders')).toBeInTheDocument();
-      expect(
-        screen.getByText(/Configure when and how you receive reminders/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Configure when and how you receive reminders/)).toBeInTheDocument();
     });
 
     it('should display the reminders enabled toggle', () => {
@@ -150,9 +148,7 @@ describe('ReminderPreferencesSection Component', () => {
       render(<ReminderPreferencesSection />);
 
       expect(screen.getByText('Quiet Hours')).toBeInTheDocument();
-      expect(
-        screen.getByText("Don't send reminders during these hours")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Don't send reminders during these hours")).toBeInTheDocument();
     });
 
     it('should toggle quiet hours', async () => {
@@ -259,9 +255,7 @@ describe('ReminderPreferencesSection Component', () => {
 
       render(<ReminderPreferencesSection />);
 
-      expect(
-        screen.queryByRole('button', { name: /Reset to Defaults/ })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Reset to Defaults/ })).not.toBeInTheDocument();
     });
   });
 

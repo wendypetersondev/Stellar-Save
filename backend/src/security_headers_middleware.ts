@@ -5,8 +5,10 @@
  * to prevent XSS, clickjacking, and other client-side attacks.
  */
 
-import { Request, Response, NextFunction } from 'express';
 import { config } from './config';
+
+import type { Request, Response, NextFunction } from 'express';
+
 
 export interface CSPDirectives {
   'default-src'?: string[];
@@ -82,17 +84,11 @@ export class SecurityHeadersMiddleware {
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
     // Permissions Policy (formerly Feature Policy)
-    res.setHeader(
-      'Permissions-Policy',
-      'geolocation=(), microphone=(), camera=(), payment=()'
-    );
+    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=()');
 
     // Strict Transport Security (HSTS) - only in production
     if (config.nodeEnv === 'production') {
-      res.setHeader(
-        'Strict-Transport-Security',
-        'max-age=31536000; includeSubDomains; preload'
-      );
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     }
 
     // Remove X-Powered-By header

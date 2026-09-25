@@ -32,6 +32,14 @@ export enum CircuitState {
   HALF_OPEN = 'HALF_OPEN',
 }
 
+export interface CircuitBreakerStats {
+  name: string;
+  state: CircuitState;
+  failureCount: number;
+  successCount: number;
+  totalCount: number;
+}
+
 export { CircuitBreakerOpenError };
 
 export class CircuitBreaker<TArgs extends any[] = any[], TResult = any> {
@@ -91,7 +99,9 @@ export class CircuitBreaker<TArgs extends any[] = any[], TResult = any> {
     const currentState = this.getState();
 
     if (currentState === CircuitState.OPEN) {
-      const openErr = new CircuitBreakerOpenError('Circuit breaker is OPEN — anchor request blocked');
+      const openErr = new CircuitBreakerOpenError(
+        'Circuit breaker is OPEN — anchor request blocked'
+      );
       if (this.fallback) {
         return this.fallback(openErr, ...args);
       }

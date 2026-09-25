@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { PrismaClient } from '@prisma/client';
-import { AnalyticsService } from '../analytics_service';
+
 import { AnalyticsAggregator } from '../analytics_aggregator';
-import * as redis from '../redis';
+import { AnalyticsService } from '../analytics_service';
 
 describe('AnalyticsService', () => {
   let prisma: PrismaClient;
@@ -114,7 +114,7 @@ describe('AnalyticsService', () => {
 
       expect(stats).toBeDefined();
       expect(stats?.totalUsers).toBeGreaterThan(0);
-      expect(stats?.activeUsers).toBeLessThanOrEqual(stats?.totalUsers!);
+      expect(stats?.activeUsers).toBeLessThanOrEqual(stats!.totalUsers);
     });
 
     it('should return null for non-existent date', async () => {
@@ -238,11 +238,7 @@ describe('AnalyticsService', () => {
     beforeAll(async () => {
       // Record multiple events
       for (let i = 0; i < 5; i++) {
-        await analyticsService.recordEvent(
-          'test_event',
-          'test_action_' + i,
-          'user-' + i
-        );
+        await analyticsService.recordEvent('test_event', 'test_action_' + i, 'user-' + i);
       }
     });
 
@@ -393,9 +389,7 @@ describe('AnalyticsAggregator', () => {
             eventName: 'test_event_' + i,
             userId: 'user-' + (i % 3),
             groupId: 'group-' + (i % 2),
-            createdAt: new Date(
-              yesterday.getTime() + Math.random() * 24 * 60 * 60 * 1000
-            ),
+            createdAt: new Date(yesterday.getTime() + Math.random() * 24 * 60 * 60 * 1000),
           },
         });
       }

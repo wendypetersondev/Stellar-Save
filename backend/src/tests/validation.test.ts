@@ -1,6 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { validateBody, validateQuery, validateParams, schemas } from '../lib/validation';
+
 import { AppError } from '../lib/errors';
+import { validateBody, validateQuery, schemas } from '../lib/validation';
+
+import type { Request, Response, NextFunction } from 'express';
 
 function makeReq(body: unknown = {}, query: unknown = {}, params: unknown = {}): Request {
   return { body, query, params } as unknown as Request;
@@ -12,7 +14,9 @@ function makeRes(): Response {
 
 function captureNext(): { next: NextFunction; calls: unknown[] } {
   const calls: unknown[] = [];
-  const next: NextFunction = (arg?: unknown) => { calls.push(arg); };
+  const next: NextFunction = (arg?: unknown) => {
+    calls.push(arg);
+  };
   return { next, calls };
 }
 
@@ -23,7 +27,9 @@ describe('validateBody', () => {
     const mw = validateBody(schemas.authChallenge);
 
     it('passes a valid Stellar address', () => {
-      const req = makeReq({ walletAddress: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN' });
+      const req = makeReq({
+        walletAddress: 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN',
+      });
       const { next, calls } = captureNext();
       mw(req, makeRes(), next);
       expect(calls).toHaveLength(1);
@@ -31,11 +37,15 @@ describe('validateBody', () => {
     });
 
     it('strips whitespace from walletAddress', () => {
-      const req = makeReq({ walletAddress: '  GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN  ' });
+      const req = makeReq({
+        walletAddress: '  GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN  ',
+      });
       const { next, calls } = captureNext();
       mw(req, makeRes(), next);
       expect(calls[0]).toBeUndefined();
-      expect((req as any).body.walletAddress).toBe('GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN');
+      expect((req as any).body.walletAddress).toBe(
+        'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN'
+      );
     });
 
     it('rejects missing walletAddress', () => {
@@ -72,6 +82,7 @@ describe('validateBody', () => {
     });
 
     it('rejects when signature is missing', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- discarded via rest-spread
       const { signature: _, ...noSig } = base;
       const req = makeReq(noSig);
       const { next, calls } = captureNext();

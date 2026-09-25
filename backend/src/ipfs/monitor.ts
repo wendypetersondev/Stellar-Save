@@ -1,6 +1,6 @@
 import { IpfsClient } from './client';
-import { PinningService } from './pinning_service';
 import { PinningQueue } from './pinning_queue';
+import { PinningService } from './pinning_service';
 import { logger } from '../logger';
 
 export interface IpfsMonitorAlert {
@@ -105,9 +105,7 @@ export class IpfsMonitor {
   }
 
   private addAlert(alert: Omit<IpfsMonitorAlert, 'id'>): void {
-    const existing = this.alerts.find(
-      (a) => a.type === alert.type && !a.acknowledged,
-    );
+    const existing = this.alerts.find((a) => a.type === alert.type && !a.acknowledged);
     if (existing) return;
 
     const newAlert: IpfsMonitorAlert = {

@@ -1,4 +1,6 @@
-import { IpfsClient, RetryConfig } from './client';
+import { IpfsClient } from './client';
+
+import type { RetryConfig } from './client';
 
 describe('IpfsClient', () => {
   let mockFetch: jest.Mock;
@@ -119,12 +121,10 @@ describe('IpfsClient', () => {
   describe('pinAdd', () => {
     it('should retry pinAdd on failure', async () => {
       const error = new Error('Connection timeout');
-      mockFetch
-        .mockRejectedValueOnce(error)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ Pins: ['QmPin123'] }),
-        });
+      mockFetch.mockRejectedValueOnce(error).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ Pins: ['QmPin123'] }),
+      });
 
       const client = new IpfsClient('http://localhost:5001', 1000, { maxRetries: 2 });
       const result = await client.pinAdd('QmPin123');
@@ -138,12 +138,10 @@ describe('IpfsClient', () => {
   describe('pinRm', () => {
     it('should retry pinRm on failure', async () => {
       const error = new Error('Connection timeout');
-      mockFetch
-        .mockRejectedValueOnce(error)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ Pins: [] }),
-        });
+      mockFetch.mockRejectedValueOnce(error).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ Pins: [] }),
+      });
 
       const client = new IpfsClient('http://localhost:5001', 1000, { maxRetries: 2 });
       const result = await client.pinRm('QmPin456');
@@ -157,12 +155,10 @@ describe('IpfsClient', () => {
   describe('cat', () => {
     it('should retry cat on failure', async () => {
       const error = new Error('Gateway error');
-      mockFetch
-        .mockRejectedValueOnce(error)
-        .mockResolvedValueOnce({
-          ok: true,
-          text: async () => 'file content',
-        });
+      mockFetch.mockRejectedValueOnce(error).mockResolvedValueOnce({
+        ok: true,
+        text: async () => 'file content',
+      });
 
       const client = new IpfsClient('http://localhost:5001', 1000, { maxRetries: 2 });
       const content = await client.cat('QmFile123');

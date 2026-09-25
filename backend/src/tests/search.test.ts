@@ -1,11 +1,10 @@
 import { SearchService } from '../search';
-import { Group, Member, Transaction } from '../models';
 
 // Mock Elasticsearch Client
 class MockClient {
   indices = {
     exists: async () => true,
-    create: async () => ({})
+    create: async () => ({}),
   };
   ping = async () => true;
   index = async () => ({});
@@ -13,10 +12,8 @@ class MockClient {
     if (params.index === 'groups') {
       return {
         hits: {
-          hits: [
-            { _source: { id: '1', name: 'Weekly Savers' } }
-          ]
-        }
+          hits: [{ _source: { id: '1', name: 'Weekly Savers' } }],
+        },
       };
     }
     return { hits: { hits: [] } };
@@ -27,9 +24,9 @@ async function runTests() {
   console.log('🧪 Running Search Service Tests...');
 
   const searchService = new SearchService();
-  // @ts-ignore - Injecting mock client
+  // @ts-expect-error - Injecting mock client
   searchService['client'] = new MockClient();
-  // @ts-ignore
+  // @ts-expect-error - Injecting mock client
   searchService['isConnected'] = true;
 
   // Test searchGroups
@@ -55,7 +52,7 @@ async function runTests() {
   console.log('SEARCH TESTS PASSED! 🎉');
 }
 
-runTests().catch(err => {
+runTests().catch((err) => {
   console.error(err);
   process.exit(1);
 });

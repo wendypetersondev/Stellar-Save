@@ -9,7 +9,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { NotificationTransport } from '../notifications/NotificationTransport';
 import * as notificationPermission from '../notifications/notificationPermission';
 import * as swRegistration from '../notifications/serviceWorkerRegistration';
-import type { TransportNotification, DeliveryCallback } from '../notifications/types';
+import type { TransportNotification, DeliveryCallback, DeliveryChannel } from '../notifications/types';
 
 // Mock the browser API modules
 vi.mock('../notifications/notificationPermission');
@@ -56,7 +56,7 @@ describe('NotificationTransport', () => {
           title: 'Test Title',
           body: 'Test message',
           id: 'test-notification-1',
-        }),
+        })
       );
     });
 
@@ -100,7 +100,7 @@ describe('NotificationTransport', () => {
         expect.objectContaining({
           success: true,
           channel: 'browser',
-        }),
+        })
       );
     });
 
@@ -128,7 +128,7 @@ describe('NotificationTransport', () => {
         expect.objectContaining({
           success: true,
           channel: 'browser',
-        }),
+        })
       );
     });
 
@@ -177,7 +177,7 @@ describe('NotificationTransport', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: expect.stringContaining('Test Title'),
-        }),
+        })
       );
 
       expect(results[0].success).toBe(true);
@@ -213,7 +213,7 @@ describe('NotificationTransport', () => {
 
       expect(global.fetch).toHaveBeenCalledWith(
         'https://custom.endpoint.com/notify',
-        expect.any(Object),
+        expect.any(Object)
       );
     });
   });
@@ -239,7 +239,7 @@ describe('NotificationTransport', () => {
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-        }),
+        })
       );
 
       expect(results[0].success).toBe(true);
@@ -257,17 +257,15 @@ describe('NotificationTransport', () => {
       vi.useFakeTimers();
 
       let abortCalled = false;
-      global.fetch = vi.fn().mockImplementation(
-        (_url, { signal }: { signal: AbortSignal }) => {
-          signal.addEventListener('abort', () => {
-            abortCalled = true;
-          });
+      global.fetch = vi.fn().mockImplementation((_url, { signal }: { signal: AbortSignal }) => {
+        signal.addEventListener('abort', () => {
+          abortCalled = true;
+        });
 
-          return new Promise(() => {
-            // Never resolves (simulating timeout)
-          });
-        },
-      );
+        return new Promise(() => {
+          // Never resolves (simulating timeout)
+        });
+      });
 
       const notifWithTimeout: TransportNotification = {
         ...mockNotification,
@@ -291,7 +289,7 @@ describe('NotificationTransport', () => {
 
   describe('Error handling', () => {
     it('should handle unknown delivery channel', async () => {
-      const results = await transport.send(mockNotification, ['unknown' as any]);
+      const results = await transport.send(mockNotification, ['unknown' as DeliveryChannel]);
 
       expect(results[0].success).toBe(false);
       expect(results[0].error).toContain('Unknown delivery channel');

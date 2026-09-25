@@ -1,5 +1,6 @@
-import { AuditLog, Member, Group, Transaction } from './models';
 import { mockMembers, mockGroups, mockTransactions, mockAuditLogs } from './mock_data';
+
+import type { AuditLog, Member, Group, Transaction } from './models';
 
 export class AdminService {
   private auditLogs: AuditLog[] = [...mockAuditLogs];
@@ -23,11 +24,11 @@ export class AdminService {
   }
 
   getUserById(id: string) {
-    return this.members.find(u => u.id === id);
+    return this.members.find((u) => u.id === id);
   }
 
   updateUser(id: string, updates: Partial<Member>, adminId: string) {
-    const index = this.members.findIndex(u => u.id === id);
+    const index = this.members.findIndex((u) => u.id === id);
     if (index === -1) return null;
 
     this.members[index] = { ...this.members[index], ...updates };
@@ -36,7 +37,7 @@ export class AdminService {
   }
 
   deleteUser(id: string, adminId: string) {
-    const index = this.members.findIndex(u => u.id === id);
+    const index = this.members.findIndex((u) => u.id === id);
     if (index === -1) return false;
 
     this.members.splice(index, 1);
@@ -48,7 +49,13 @@ export class AdminService {
     return this.auditLogs;
   }
 
-  logAction(adminId: string, action: string, targetId?: string, targetType?: string, metadata?: any) {
+  logAction(
+    adminId: string,
+    action: string,
+    targetId?: string,
+    targetType?: string,
+    metadata?: any
+  ) {
     const log: AuditLog = {
       id: `log_${Date.now()}`,
       userId: adminId,
@@ -56,7 +63,7 @@ export class AdminService {
       targetId,
       targetType,
       timestamp: Date.now(),
-      metadata
+      metadata,
     };
     this.auditLogs.unshift(log);
   }

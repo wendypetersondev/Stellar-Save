@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
@@ -25,9 +25,7 @@ describe('SettingsPage Integration - Reminder Preferences', () => {
 
     // Check reminder section
     expect(screen.getByText('Contribution Reminders')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Configure when and how you receive reminders/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Configure when and how you receive reminders/)).toBeInTheDocument();
   });
 
   it('should have the divider between sections', () => {
@@ -72,9 +70,7 @@ describe('SettingsPage Integration - Reminder Preferences', () => {
     await user.click(reminderToggle);
 
     // Options should be hidden
-    expect(
-      screen.queryByText('Remind me before contribution deadline')
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Remind me before contribution deadline')).not.toBeInTheDocument();
   });
 
   it('should persist preferences to localStorage', async () => {
@@ -82,10 +78,6 @@ describe('SettingsPage Integration - Reminder Preferences', () => {
     render(<SettingsPage />);
 
     // Enable reminders (should be on by default)
-    const reminderToggle = screen.getByRole('checkbox', {
-      name: /Enable contribution reminders/,
-    });
-
     // By default should have reminder preferences in localStorage
     // after toggling a setting
     const oneHourOption = screen.getByDisplayValue('1h');

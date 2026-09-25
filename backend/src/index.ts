@@ -1,60 +1,65 @@
 // ── Distributed tracing ───────────────────────────────────────────────────────
 // MUST be the very first import so OpenTelemetry can patch instrumented libraries
 // (express, http, pg, ioredis, …) before they are required. No-op when tracing
-// is disabled (the default).
+// is disabled (the default). Deliberately out of import/order's alphabetical
+// sort for this reason -- do not let `eslint --fix` reorder it.
+// eslint-disable-next-line import/order
 import { startTracing } from './tracing';
 startTracing();
 
 import fs from 'fs';
 import http2 from 'http2';
-import dotenv from 'dotenv';
+
 
 dotenv.config();
 
-import express from 'express';
-import compression from 'compression';
-import cors from 'cors';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { RecommendationEngine } from './recommendation';
-import { EmailService } from './email_service';
-import { ExportService } from './export_service';
-import { BackupService, S3HttpClient } from './backup_service';
-import { BackupScheduler } from './backup_scheduler';
-import { RecoveryService } from './recovery_service';
+import compression from 'compression';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+
+import { AuditEventLog, auditMiddleware, createAuditRouter } from './audit_event_log';
 import { BackupMonitor } from './backup_monitor';
 import { BackupRestoreDrill } from './backup_restore_drill';
+import { BackupScheduler } from './backup_scheduler';
+import { BackupService, S3HttpClient } from './backup_service';
 import { ContractEventIndexer } from './contract_event_indexer';
-import { WebPushService } from './web_push_service';
-import { versionMiddleware } from './versioning';
-import { createV1Router } from './routes/v1';
+import docsRouter from './docs';
+import { EmailService } from './email_service';
+import { ExportService } from './export_service';
 import { FeedbackService } from './feedback_service';
-import { createV2Router } from './routes/v2';
-import { metricsMiddleware, metricsHandler } from './metrics';
-import { requestLogger, logger, errFields } from './logger';
-import { requestId } from './middleware/requestId';
-import { disconnectPrisma, prisma } from './prisma_client';
-import { createGracefulShutdown } from './graceful_shutdown';
-import { createRateLimiterMiddleware, createAuthRateLimiterMiddleware } from './rate_limiter';
-import { createTieredRateLimiter, configureTier, setEndpointCost } from './redis_rate_limiter';
-import { createQuotaReporterRouter } from './routes/quota_reporter';
-import { createWebhookRouter } from './routes/webhooks';
-import { getMemberReputation } from './reputation_service';
-import { createAuthRouter } from './routes/auth';
-import { createUserRouter } from './routes/user';
-import { createRampRouter } from './routes/ramp';
-import { createSep31Router } from './routes/sep31';
 import { rampProtection } from './fiat_ramp_protection';
+import { createGracefulShutdown } from './graceful_shutdown';
+import { IpfsClient, PinningService, GroupMetadataCache, IpfsMonitor } from './ipfs';
 import { errorMiddleware, notFoundMiddleware } from './lib/errorMiddleware';
 import { AppError } from './lib/errors';
-import { AuditEventLog, auditMiddleware, createAuditRouter } from './audit_event_log';
-import { initWebSocketGateway } from './ws_gateway';
+import { requestLogger, logger, errFields } from './logger';
+import { metricsMiddleware, metricsHandler } from './metrics';
+import { requestId } from './middleware/requestId';
+import { mockGroups, mockInteractions } from './mock_data';
+import { disconnectPrisma, prisma } from './prisma_client';
+import { createAuthRateLimiterMiddleware } from './rate_limiter';
+import { RecommendationEngine } from './recommendation';
 import { initReconciliationService } from './reconciliation_service';
-import docsRouter from './docs';
-import { IpfsClient, PinningService, GroupMetadataCache, IpfsMonitor } from './ipfs';
-import { createIpfsRouter } from './routes/ipfs';
+import { RecoveryService } from './recovery_service';
+import { createTieredRateLimiter, configureTier, setEndpointCost } from './redis_rate_limiter';
+import { getMemberReputation } from './reputation_service';
+import { createAuthRouter } from './routes/auth';
 import { createHealthRouter, createDatabaseCheck, createRpcCheck } from './routes/health';
+import { createIpfsRouter } from './routes/ipfs';
+import { createQuotaReporterRouter } from './routes/quota_reporter';
+import { createRampRouter } from './routes/ramp';
+import { createSep31Router } from './routes/sep31';
+import { createUserRouter } from './routes/user';
+import { createV1Router } from './routes/v1';
+import { createV2Router } from './routes/v2';
+import { createWebhookRouter } from './routes/webhooks';
+import { versionMiddleware } from './versioning';
+import { WebPushService } from './web_push_service';
+import { initWebSocketGateway } from './ws_gateway';
 
 const CSP_POLICY = [
   "default-src 'self'",
@@ -67,7 +72,7 @@ const CSP_POLICY = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "report-uri /api/csp-report",
+  'report-uri /api/csp-report',
 ].join('; ');
 
 // ── Global middleware chain (order matters) ──────────────────────────────────
@@ -129,7 +134,7 @@ app.use(
   createHealthRouter({
     checkDatabase: createDatabaseCheck(prisma),
     checkRpc: createRpcCheck(config.stellar.rpcUrl),
-  }),
+  })
 );
 
 app.use(createTieredRateLimiter());
@@ -142,11 +147,15 @@ app.use('/graphql', authRateLimiter);
 app.use('/api/auth', authRateLimiter);
 
 // ── CSP violation reporting ───────────────────────────────────────────────────
-app.post('/api/csp-report', express.json({ type: ['application/json', 'application/csp-report'] }), (req, res) => {
-  const report = req.body?.['csp-report'] ?? req.body;
-  logger.warn('[CSP Violation]', { report: JSON.stringify(report) });
-  res.status(204).end();
-});
+app.post(
+  '/api/csp-report',
+  express.json({ type: ['application/json', 'application/csp-report'] }),
+  (req, res) => {
+    const report = req.body?.['csp-report'] ?? req.body;
+    logger.warn('[CSP Violation]', { report: JSON.stringify(report) });
+    res.status(204).end();
+  }
+);
 
 // ========== CACHE ROUTES (Issue #563) ==========
 
@@ -175,9 +184,12 @@ apolloServer.start().then(() => {
     `);
   });
 
-  app.use('/graphql', expressMiddleware(apolloServer, {
-    context: async () => ({}),
-  }));
+  app.use(
+    '/graphql',
+    expressMiddleware(apolloServer, {
+      context: async () => ({}),
+    })
+  );
 });
 
 const PORT = config.port;
@@ -201,10 +213,13 @@ if (config.ipfs.enabled) {
 }
 
 // ── Services ─────────────────────────────────────────────────────────────────
-import { mockGroups, mockInteractions } from './mock_data';
 const engine = new RecommendationEngine(mockGroups, mockInteractions);
 const emailService = new EmailService();
-const exportService = new ExportService(emailService, engine.getInteractions(), engine.getPreferences());
+const exportService = new ExportService(
+  emailService,
+  engine.getInteractions(),
+  engine.getPreferences()
+);
 const s3Client = new S3HttpClient();
 const backupService = new BackupService(s3Client);
 const backupScheduler = new BackupScheduler(backupService);
@@ -219,7 +234,7 @@ const backupRestoreDrill = new BackupRestoreDrill(backupService, s3Client, {
 });
 const feedbackService = new FeedbackService(prisma);
 
-const adminService = new AdminService();
+new AdminService();
 
 const webPushService = new WebPushService();
 
@@ -241,7 +256,9 @@ if (config.backup.drillEnabled) {
 
 // Start the contract event indexer
 if (config.indexer.enabled) {
-  eventIndexer.start().catch((error) => logger.error('event indexer failed to start', errFields(error)));
+  eventIndexer
+    .start()
+    .catch((error) => logger.error('event indexer failed to start', errFields(error)));
 }
 
 // Start on-chain anomaly monitor
@@ -303,10 +320,7 @@ app.use('/api/v1/rate-limits', createQuotaReporterRouter());
 
 // ── IPFS routes ──────────────────────────────────────────────────────────────
 if (ipfsClient && pinningService && metadataCache && ipfsMonitor) {
-  app.use(
-    '/api/v1/ipfs',
-    createIpfsRouter(ipfsClient, pinningService, metadataCache, ipfsMonitor),
-  );
+  app.use('/api/v1/ipfs', createIpfsRouter(ipfsClient, pinningService, metadataCache, ipfsMonitor));
   logger.info('IPFS API mounted', { path: `/api/v1/ipfs`, port: PORT });
 }
 
@@ -327,8 +341,15 @@ app.get('/api/members/:address/reputation', async (req, res, next) => {
 
 // ── Legacy unversioned routes (redirect to v1 for backward compatibility) ────
 app.use((req, res, next) => {
-  const legacyPaths = ['/health', '/recommendations', '/preferences', '/export', '/backup', '/search'];
-  if (legacyPaths.some(p => req.path.startsWith(p))) {
+  const legacyPaths = [
+    '/health',
+    '/recommendations',
+    '/preferences',
+    '/export',
+    '/backup',
+    '/search',
+  ];
+  if (legacyPaths.some((p) => req.path.startsWith(p))) {
     res.setHeader('X-API-Deprecation-Notice', 'Unversioned paths are deprecated. Use /api/v1/...');
     res.setHeader('Deprecation', 'true');
     res.setHeader('Sunset', '2027-01-01');
@@ -390,15 +411,21 @@ server.listen(PORT, async () => {
           ledgerSeq: event.ledger || event.ledgerSeq || 0,
           timestamp: event.createdAt ? new Date(event.createdAt) : new Date(),
         });
-      } catch { /* non-blocking */ }
+      } catch {
+        /* non-blocking */
+      }
     };
   }
 
   // ── Issue #1: Start audit chain integrity verification job ────────────────
   if (process.env.AUDIT_VERIFY_ENABLED !== 'false') {
-    const auditIntervalMs = parseInt(process.env.AUDIT_VERIFY_INTERVAL_MS ?? String(60 * 60 * 1000));
+    const auditIntervalMs = parseInt(
+      process.env.AUDIT_VERIFY_INTERVAL_MS ?? String(60 * 60 * 1000)
+    );
     AuditEventLog.startVerificationJob(auditIntervalMs);
-    logger.info('audit integrity verification job started', { interval_min: auditIntervalMs / 60000 });
+    logger.info('audit integrity verification job started', {
+      interval_min: auditIntervalMs / 60000,
+    });
   }
 
   // ── Issue #3: Start reconciliation service ────────────────────────────────
@@ -411,17 +438,22 @@ server.listen(PORT, async () => {
     });
     reconciliation.start();
     logger.info('reconciliation service started', {
-      interval_min: parseInt(process.env.RECONCILIATION_INTERVAL_MS ?? String(15 * 60 * 1000)) / 60000,
+      interval_min:
+        parseInt(process.env.RECONCILIATION_INTERVAL_MS ?? String(15 * 60 * 1000)) / 60000,
     });
   }
 });
 
 // Graceful shutdown: stop accepting new connections, let in-flight requests
 // finish within a timeout, then close DB connections before exiting.
-const gracefulShutdown = createGracefulShutdown(server, async () => {
-  fraudDetectionWorker.stop();
-  await disconnectPrisma();
-}, { timeoutMs: parseInt(process.env.SHUTDOWN_TIMEOUT_MS ?? '10000', 10) });
+const gracefulShutdown = createGracefulShutdown(
+  server,
+  async () => {
+    fraudDetectionWorker.stop();
+    await disconnectPrisma();
+  },
+  { timeoutMs: parseInt(process.env.SHUTDOWN_TIMEOUT_MS ?? '10000', 10) }
+);
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));

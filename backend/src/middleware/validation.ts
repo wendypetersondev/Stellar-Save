@@ -1,6 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
-import { z, ZodSchema } from 'zod';
+import { z } from 'zod';
+
 import { logger } from '../logger';
+
+import type { Request, Response, NextFunction } from 'express';
+import type { ZodSchema } from 'zod';
+
 
 export interface AuthenticatedRequest extends Request {
   user?: any;
@@ -21,7 +25,7 @@ export class ValidationMiddleware {
         next();
       } catch (err) {
         if (err instanceof z.ZodError) {
-          const errors: ValidationError[] = err.issues.map(issue => ({
+          const errors: ValidationError[] = err.issues.map((issue) => ({
             field: issue.path.join('.') || 'unknown',
             message: issue.message,
           }));
@@ -53,7 +57,7 @@ export class ValidationMiddleware {
         next();
       } catch (err) {
         if (err instanceof z.ZodError) {
-          const errors: ValidationError[] = err.issues.map(issue => ({
+          const errors: ValidationError[] = err.issues.map((issue) => ({
             field: issue.path.join('.') || 'body',
             message: issue.message,
           }));
@@ -85,7 +89,7 @@ export class ValidationMiddleware {
         next();
       } catch (err) {
         if (err instanceof z.ZodError) {
-          const errors: ValidationError[] = err.issues.map(issue => ({
+          const errors: ValidationError[] = err.issues.map((issue) => ({
             field: issue.path.join('.') || 'query',
             message: issue.message,
           }));
@@ -117,7 +121,7 @@ export class ValidationMiddleware {
         next();
       } catch (err) {
         if (err instanceof z.ZodError) {
-          const errors: ValidationError[] = err.issues.map(issue => ({
+          const errors: ValidationError[] = err.issues.map((issue) => ({
             field: issue.path.join('.') || 'params',
             message: issue.message,
           }));
